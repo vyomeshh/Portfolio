@@ -1,0 +1,9 @@
+*(I have included the exact stable version numbers to guarantee it builds perfectly).*
+
+### Step 2: Push the fix to GitHub
+Open your terminal in VS Code (in your main `Portfolio` folder) and push this fix:
+
+```bash
+git add backend/requirements.txt
+git commit -m "Cleaned up requirements for Render"
+git push origin main

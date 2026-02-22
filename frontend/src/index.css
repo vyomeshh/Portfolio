@@ -1,0 +1,462 @@
+/* --- CSS VARIABLES --- */
+:root {
+  --bg-dark: #050505;
+  --card-bg: rgba(255, 255, 255, 0.04);
+  --card-border: rgba(255, 255, 255, 0.08);
+  --accent-gold: #ffb400;
+  --text-main: #e2e8f0;
+  --text-dim: #94a3b8;
+  --nav-blur: rgba(0, 0, 0, 0.7);
+}
+
+@import "tailwindcss";
+
+/* --- BASE STYLES --- */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: var(--bg-dark);
+  color: var(--text-main);
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+.portfolio-root {
+  min-height: 100vh;
+  position: relative;
+}
+
+/* --- BACKGROUND GLOWS --- */
+.bg-glow {
+  position: fixed;
+  width: 50vw;
+  height: 50vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.15;
+}
+
+.bg-glow-1 {
+  top: -10%;
+  left: -10%;
+  background: var(--accent-gold);
+}
+
+.bg-glow-2 {
+  bottom: -10%;
+  right: -10%;
+  background: #3b82f6;
+}
+
+/* --- NAVIGATION --- */
+.nav-bar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--nav-blur);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--card-border);
+}
+
+.nav-content {
+  max-width: 1100px;
+  margin: 0 auto;
+  height: 70px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.logo span {
+  color: var(--accent-gold);
+}
+
+.nav-links {
+  display: none;
+  gap: 30px;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: var(--text-dim);
+  font-weight: 500;
+  font-size: 0.9rem;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: var(--accent-gold);
+}
+
+.nav-socials {
+  display: flex;
+  gap: 15px;
+}
+
+.nav-socials a {
+  color: var(--text-dim);
+  transition: transform 0.3s;
+}
+
+.nav-socials a:hover {
+  transform: translateY(-2px);
+  color: #fff;
+}
+
+/* --- LAYOUT --- */
+.main-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.section {
+  padding: 80px 0;
+}
+
+.section-header {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-bottom: 40px;
+}
+
+.section-header h2 {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+/* --- HERO --- */
+.hero {
+  height: calc(100vh - 70px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.badge {
+  background: rgba(255, 180, 0, 0.1);
+  color: var(--accent-gold);
+  padding: 6px 16px;
+  border-radius: 30px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  border: 1px solid rgba(255, 180, 0, 0.2);
+  margin-bottom: 25px;
+}
+
+.hero-title {
+  font-size: 4rem;
+  font-weight: 900;
+  margin-bottom: 20px;
+  letter-spacing: -2px;
+}
+
+.hero-subtitle {
+  font-size: 1.5rem;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin-bottom: 40px;
+}
+
+.hero-subtitle span {
+  color: #fff;
+  font-weight: 600;
+}
+
+.hero-btns {
+  display: flex;
+  gap: 20px;
+}
+
+.btn-primary {
+  background: var(--accent-gold);
+  color: #000;
+  border: none;
+  padding: 14px 30px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.btn-primary:hover {
+  transform: scale(1.05);
+  background: #ffc845;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  text-decoration: none;
+  padding: 14px 30px;
+  border-radius: 12px;
+  font-weight: 700;
+  border: 1px solid var(--card-border);
+  transition: background 0.3s;
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.scroll-indicator {
+  margin-top: 60px;
+  animation: bounce 2s infinite;
+  color: var(--text-dim);
+}
+
+/* --- CARDS & GRIDS --- */
+.about-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 40px;
+  border-radius: 24px;
+  font-size: 1.2rem;
+  color: var(--text-dim);
+}
+
+.skills-grid, .projects-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.skill-category, .project-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  padding: 30px;
+  border-radius: 20px;
+  transition: transform 0.3s, border-color 0.3s;
+}
+
+.skill-category:hover, .project-card:hover {
+  transform: translateY(-5px);
+  border-color: rgba(255, 180, 0, 0.4);
+}
+
+.project-card h3 {
+  margin-bottom: 15px;
+}
+
+.project-link {
+  font-size: 0.9rem;
+  color: var(--accent-gold);
+  font-weight: 600;
+}
+
+.split-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 40px;
+}
+
+/* --- TIMELINE --- */
+.timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.timeline-item {
+  padding-left: 20px;
+  border-left: 2px solid var(--card-border);
+  position: relative;
+}
+
+.timeline-item.active {
+  border-left-color: var(--accent-gold);
+}
+
+.timeline-item::after {
+  content: '';
+  position: absolute;
+  left: -7px;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #333;
+}
+
+.timeline-item.active::after {
+  background: var(--accent-gold);
+}
+
+/* --- CHATBOT UI --- */
+.chat-fab {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  background: var(--accent-gold);
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: 0 10px 25px rgba(255, 180, 0, 0.3);
+  transition: transform 0.3s;
+  animation: pulse 2s infinite;
+}
+
+.chatbot-window {
+  position: fixed;
+  bottom: 100px;
+  right: 30px;
+  width: 380px;
+  height: 550px;
+  background: #111;
+  border: 1px solid var(--card-border);
+  border-radius: 24px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  transform: translateY(20px);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 1000;
+}
+
+.chatbot-window.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: all;
+}
+
+.chat-header {
+  background: var(--accent-gold);
+  padding: 20px;
+  color: #000;
+  font-weight: 800;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.chat-header button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #000;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: linear-gradient(to bottom, #0a0a0a, #111);
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.chat-bubble {
+  max-width: 80%;
+  padding: 12px 16px;
+  border-radius: 16px;
+  font-size: 0.9rem;
+}
+
+.chat-bubble.bot {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--card-border);
+  align-self: flex-start;
+  border-top-left-radius: 0;
+}
+
+.chat-bubble.user {
+  background: var(--accent-gold);
+  color: #000;
+  align-self: flex-end;
+  border-top-right-radius: 0;
+  font-weight: 600;
+}
+
+.chat-input-area {
+  padding: 15px;
+  background: #000;
+  display: flex;
+  gap: 10px;
+}
+
+.chat-input-area input {
+  flex: 1;
+  background: #111;
+  border: 1px solid var(--card-border);
+  padding: 10px 15px;
+  border-radius: 12px;
+  color: #fff;
+  outline: none;
+}
+
+.chat-input-area button {
+  background: var(--accent-gold);
+  border: none;
+  padding: 10px;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+/* --- ANIMATIONS --- */
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+  40% {transform: translateY(-10px);}
+  60% {transform: translateY(-5px);}
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* --- RESPONSIVE --- */
+@media (min-width: 768px) {
+  .nav-links { display: flex; }
+  .hero-title { font-size: 5.5rem; }
+  .split-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+  .hero-title { font-size: 3rem; }
+  .chatbot-window {
+    width: 90vw;
+    right: 5vw;
+    bottom: 20px;
+    height: 80vh;
+  }
+}

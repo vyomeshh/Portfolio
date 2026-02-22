@@ -1,0 +1,16 @@
+.chat-button {
+  position: fixed;
+  bottom: 30px;
+  right: 30px;
+  background: #000;
+  color: white;
+  padding: 14px 22px;
+  border-radius: 30px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.chat-button:hover {
+  background: #333;
+}

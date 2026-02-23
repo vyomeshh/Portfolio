@@ -95,6 +95,9 @@ def chat_with_ai(request: ChatRequest):
     """
 
     try:
+        # We combine the system prompt and user prompt into one message to bypass strict OpenRouter 400 errors
+        combined_prompt = f"{context}\n\nUSER QUESTION:\n{request.message}"
+
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
@@ -104,29 +107,27 @@ def chat_with_ai(request: ChatRequest):
                 "X-Title": "Vyomesh AI Portfolio"
             },
             json={
-                "model": "meta-llama/llama-3-8b-instruct:free", # Using Llama-3 (Highly reliable free model)
+                "model": "google/gemini-2.0-flash-lite-preview-02-05:free", # Highly reliable free model
                 "messages": [
-                    {"role": "system", "content": context},
-                    {"role": "user", "content": request.message}
+                    {"role": "user", "content": combined_prompt}
                 ]
             }
         )
         
-        # If OpenRouter rejects it, return the exact error to the chat UI!
+        # If OpenRouter rejects it, return the exact error directly to the chat bubble!
         if response.status_code != 200:
-            error_details = response.text
-            print(f"OPENROUTER EXACT ERROR: {error_details}", flush=True)
-            return {"reply": f"OpenRouter Error: {response.status_code} - {error_details}"}
+            print(f"OPENROUTER EXACT ERROR: {response.text}", flush=True)
+            return {"reply": f"OpenRouter rejected the request. Code: {response.status_code}. Details: {response.text}"}
             
         data = response.json()
 
         if "choices" in data and len(data["choices"]) > 0:
             reply = data["choices"][0]["message"]["content"]
         else:
-            reply = "I'm having a little trouble connecting to my AI brain right now. Please try again in a moment!"
+            reply = "I connected to the AI, but it didn't return a message!"
 
         return {"reply": reply}
 
     except Exception as e:
-        print(f"Backend Error: {e}", flush=True)
-        return {"reply": f"Sorry, I am currently offline. Error details: {str(e)}"}
+        print(f"Backend Crash: {e}", flush=True)
+        return {"reply": f"The Python backend crashed! Error: {str(e)}"}

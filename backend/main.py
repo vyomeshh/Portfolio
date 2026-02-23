@@ -11,12 +11,9 @@ import requests
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# ===============================
-# FastAPI App Setup
-# ===============================
 app = FastAPI()
 
-# Enable CORS so React (Vercel) can communicate with this Render backend
+# Enable CORS 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,41 +22,25 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===============================
-# Vyomesh's Real Resume Data
-# ===============================
 resume_data = {
     "name": "Vyomesh Mishra",
     "role": "Computer Science Undergraduate & Software Developer",
-    "education": "B.Tech Computer Science & Engineering at Galgotias University (2023-2027). Class XII (89.4%) and Class X (93.6%) from Lucknow Public School.",
-    "contact": "Email: mishravyomesh14@gmail.com | Phone: (+91) 7651950803 | LinkedIn: linkedin.com/in/vyomesh-mishra | GitHub: github.com/vyomeshh",
-    "skills": [
-        "Python (Expert)", "Java", "C++", "C", "JavaScript",
-        "Data Structures and Algorithms (DSA)", "Object-Oriented Programming (OOP)", 
-        "MySQL", "Operating Systems", "Distributed Systems", "Git/GitHub"
-    ],
+    "education": "B.Tech Computer Science & Engineering at Galgotias University (2023-2027).",
+    "contact": "Email: mishravyomesh14@gmail.com | LinkedIn: linkedin.com/in/vyomesh-mishra",
+    "skills": ["Python", "Java", "C++", "DSA", "OOP", "MySQL", "Git/GitHub"],
     "experience": [
-        "Google Data Analytics Intern (2024): Architected data pipelines and advanced visualizations.",
-        "Technical Mentor at HCL GUVI (Apr-Aug 2025): Mentored students on Python and programming logic.",
-        "Club Coordinator at Galgotias Tech Council (2023-Present): Directed coding events and technical initiatives."
+        "Google Data Analytics Intern (2024)",
+        "Technical Mentor at HCL GUVI (Apr-Aug 2025)",
+        "Club Coordinator at Galgotias Tech Council (2023-Present)"
     ],
     "projects": [
-        "AI-Driven Smart File Assistant: Intelligent document querying using Python, NLP, and Machine Learning.",
-        "Student Score Predictor: ML regression model using Scikit-Learn and Pandas.",
-        "Hospital Management System: Secure Java/SQL application with an HTML/JS frontend.",
-        "Cloudinfo Weather App: Real-time weather tracking using Python, PyQt5, and OpenWeatherMap API."
-    ],
-    "achievements": [
-        "LeetCode Contest Rating: 1589 (Top 15% globally)",
-        "Google Analytics Certification",
-        "Tata GenAI Powered Data Analytics Job Simulation",
-        "GUVI Python & Java DSA Certified"
+        "AI-Driven Smart File Assistant",
+        "Student Score Predictor",
+        "Hospital Management System",
+        "Cloudinfo Weather App"
     ]
 }
 
-# ===============================
-# API Endpoints
-# ===============================
 @app.get("/resume-data")
 def get_resume():
     return resume_data
@@ -67,67 +48,57 @@ def get_resume():
 class ChatRequest(BaseModel):
     message: str
 
+# --- THE SMART FALLBACK LOGIC ---
+# If OpenRouter fails, this function analyzes the user's message and returns the perfect response
+def get_fallback_response(user_message: str) -> str:
+    msg = user_message.lower()
+    if "experience" in msg or "intern" in msg or "work" in msg:
+        return "Vyomesh was a Google Data Analytics Intern (2024) and a Technical Mentor at HCL GUVI. He also coordinates events at the Galgotias Tech Council!"
+    elif "skill" in msg or "tech" in msg or "language" in msg:
+        return f"Vyomesh is an expert in {', '.join(resume_data['skills'])}. He also has strong fundamentals in DSA and OOP."
+    elif "project" in msg or "build" in msg or "made" in msg:
+        return "His top projects include an AI-Driven Smart File Assistant, a Student Score Predictor, and a full Hospital Management System in Java!"
+    elif "education" in msg or "college" in msg or "study" in msg:
+        return "He is currently pursuing his B.Tech in Computer Science & Engineering at Galgotias University (Class of 2027)."
+    elif "contact" in msg or "email" in msg or "hire" in msg or "reach" in msg:
+        return "You can reach him directly at mishravyomesh14@gmail.com or connect with him on LinkedIn!"
+    elif "hi" in msg or "hello" in msg or "hey" in msg:
+        return "Hi there! I am Vyomesh's AI Assistant. You can ask me about his skills, experience, projects, or education."
+    else:
+        return "I am a smart assistant programmed with Vyomesh's resume! Try asking me about his 'projects', 'skills', or 'experience'."
+
 @app.post("/chat")
 def chat_with_ai(request: ChatRequest):
-    if not OPENROUTER_API_KEY:
-        return {"reply": "Error: OpenRouter API key not configured in backend."}
-
-    context = f"""
-    You are the professional AI assistant for {resume_data['name']}'s portfolio.
-    Answer recruiter questions based ONLY on the provided data. Be concise.
-    
-    CANDIDATE INFO:
-    - Name: {resume_data['name']}
-    - Role: {resume_data['role']}
-    - Education: {resume_data['education']}
-    - Contact: {resume_data['contact']}
-    
-    SKILLS: {', '.join(resume_data['skills'])}
-    
-    EXPERIENCE: 
-    {chr(10).join(resume_data['experience'])}
-    
-    PROJECTS:
-    {chr(10).join(resume_data['projects'])}
-    
-    ACHIEVEMENTS:
-    {chr(10).join(resume_data['achievements'])}
-    """
-
+    # 1. Try OpenRouter First
     try:
-        # We combine the system prompt and user prompt into one message to bypass strict OpenRouter 400 errors
-        combined_prompt = f"{context}\n\nUSER QUESTION:\n{request.message}"
+        if not OPENROUTER_API_KEY:
+            raise ValueError("No API Key")
 
         response = requests.post(
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/vyomeshh", 
-                "X-Title": "Vyomesh AI Portfolio"
+                "HTTP-Referer": "https://portfolio-vyomesh.vercel.app"
             },
             json={
-                "model": "google/gemini-2.0-flash-lite-preview-02-05:free", # Highly reliable free model
+                "model": "mistralai/mistral-7b-instruct:free",
                 "messages": [
-                    {"role": "user", "content": combined_prompt}
+                    {"role": "system", "content": f"You are Vyomesh's AI assistant. Answer using this info: {resume_data}"},
+                    {"role": "user", "content": request.message}
                 ]
-            }
+            },
+            timeout=5 # Don't let it hang forever
         )
         
-        # If OpenRouter rejects it, return the exact error directly to the chat bubble!
-        if response.status_code != 200:
-            print(f"OPENROUTER EXACT ERROR: {response.text}", flush=True)
-            return {"reply": f"OpenRouter rejected the request. Code: {response.status_code}. Details: {response.text}"}
-            
-        data = response.json()
-
-        if "choices" in data and len(data["choices"]) > 0:
-            reply = data["choices"][0]["message"]["content"]
+        if response.status_code == 200:
+            data = response.json()
+            return {"reply": data["choices"][0]["message"]["content"]}
         else:
-            reply = "I connected to the AI, but it didn't return a message!"
+            raise ValueError(f"OpenRouter rejected with {response.status_code}")
 
-        return {"reply": reply}
-
+    # 2. If OpenRouter crashes, gets a 400/401 error, or times out -> Trigger Smart Fallback!
     except Exception as e:
-        print(f"Backend Crash: {e}", flush=True)
-        return {"reply": f"The Python backend crashed! Error: {str(e)}"}
+        print(f"API Failed ({e}). Using Local Smart Fallback instead.", flush=True)
+        fallback_reply = get_fallback_response(request.message)
+        return {"reply": fallback_reply}

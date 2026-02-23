@@ -5,18 +5,13 @@ from dotenv import load_dotenv
 import os
 import requests
 
-# ===============================
-# Load Environment Variables
-# ===============================
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# ===============================
-# FastAPI App Setup
-# ===============================
+
+# App Setup
 app = FastAPI()
 
-# Enable CORS so React can communicate with this backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,9 +20,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===============================
-# Vyomesh's Real Resume Data
-# ===============================
 resume_data = {
     "name": "Vyomesh Mishra",
     "role": "Computer Science Undergraduate & Software Developer",
@@ -57,9 +49,6 @@ resume_data = {
     ]
 }
 
-# ===============================
-# API Endpoints
-# ===============================
 @app.get("/resume-data")
 def get_resume():
     return resume_data
@@ -72,7 +61,6 @@ def chat_with_ai(request: ChatRequest):
     if not OPENROUTER_API_KEY:
         return {"reply": "Error: OpenRouter API key not configured in backend."}
 
-    # Highly optimized System Prompt to make the AI act like a real assistant
     context = f"""
     You are the official, professional AI assistant for {resume_data['name']}'s portfolio website.
     Your goal is to answer recruiter and visitor questions about Vyomesh based ONLY on the provided data.
@@ -109,8 +97,8 @@ def chat_with_ai(request: ChatRequest):
                 "Content-Type": "application/json"
             },
             json={
-                # You can change this to a free model like "mistralai/mistral-7b-instruct:free" or "google/gemini-2.0-flash-lite-preview-02-05:free" if your credits run out
-                "model": "openai/gpt-3.5-turbo", 
+               
+                "model": "google/gemini-2.0-flash-lite-preview-02-05:free", 
                 "messages": [
                     {"role": "system", "content": context},
                     {"role": "user", "content": request.message}
@@ -118,7 +106,7 @@ def chat_with_ai(request: ChatRequest):
             }
         )
         
-        response.raise_for_status() # Raise an exception for bad status codes
+        response.raise_for_status() 
         data = response.json()
 
         if "choices" in data and len(data["choices"]) > 0:

@@ -6,14 +6,14 @@ import os
 import requests
 
 # ===============================
-# Load Environment Variables
+# Environment Variables Load Karein
 # ===============================
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
 app = FastAPI()
 
-# Enable CORS 
+# CORS Enable karein (Vercel se connect karne ke liye)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -50,36 +50,61 @@ class ChatRequest(BaseModel):
 
 @app.post("/chat")
 def chat_with_ai(request: ChatRequest):
-    # Strictly use OpenRouter API - No Fake Fallbacks
     if not OPENROUTER_API_KEY:
-        return {"reply": "Error: OPENROUTER_API_KEY is missing in the Render Environment Variables."}
+        return {"reply": "Error: Render ke Environment Variables mein OPENROUTER_API_KEY missing hai."}
 
-    try:
-        response = requests.post(
-            "https://openrouter.ai/api/v1/chat/completions",
-            headers={
-                "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json",
-                "HTTP-Referer": "https://portfolio-vyomesh.vercel.app" # Required by OpenRouter
-            },
-            json={
-                "model": "meta-llama/llama-3-8b-instruct:free", # Switched to highly stable Llama-3 model
-                "messages": [
-                    {"role": "system", "content": f"You are Vyomesh's AI assistant. Answer questions concisely using ONLY this info: {resume_data}"},
-                    {"role": "user", "content": request.message}
-                ]
-            },
-            timeout=30 # INCREASED TIMEOUT: Free models can take up to 15-20 seconds to reply!
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            return {"reply": data["choices"][0]["message"]["content"]}
-        else:
-            # If OpenRouter rejects it, return the exact HTTP error to the frontend
-            return {"reply": f"OpenRouter API Error {response.status_code}: {response.text}"}
+    context = f"""
+    You are Vyomesh's AI assistant. Answer questions concisely using ONLY this info: {resume_data}
+    """
+    
+    # 400 Bad Request se bachne ke liye system aur user prompt ko ek single user message mein merge kiya gaya hai
+    combined_prompt = f"{context}\n\nUser Question:\n{request.message}"
 
-    except requests.exceptions.Timeout:
-        return {"reply": "OpenRouter API timed out after 30 seconds. The free model server is currently overloaded."}
-    except Exception as e:
-        return {"reply": f"Backend Crash: {str(e)}"}
+    # Agar OpenRouter ek model hata deta hai, toh code automatically agla model try karega!
+    free_models = [
+        "meta-llama/llama-3.1-8b-instruct:free", # Naya Llama 3.1 model
+        "huggingfaceh4/zephyr-7b-beta:free",     # Zephyr (Bahut stable hai)
+        "mistralai/mistral-7b-instruct:free"     # Mistral Fallback
+    ]
+
+    last_error = ""
+
+    for model_id in free_models:
+        try:
+            response = requests.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "https://portfolio-vyomesh.vercel.app" 
+                },
+                json={
+                    "model": model_id,
+                    "messages": [
+                        {"role": "user", "content": combined_prompt}
+                    ]
+                },
+                timeout=20 # Har model ko reply karne ke liye 20 seconds denge
+            )
+            
+            # Agar API request successful hai (200 OK)
+            if response.status_code == 200:
+                data = response.json()
+                if "choices" in data and len(data["choices"]) > 0:
+                    return {"reply": data["choices"][0]["message"]["content"]}
+            
+            # Agar model fail hota hai toh error save karke loop continue karega (agla model try karega)
+            last_error = f"Model {model_id} failed with code {response.status_code}."
+            print(f"Fallback Triggered: {last_error} Details: {response.text}", flush=True)
+
+        except requests.exceptions.Timeout:
+            last_error = f"Model {model_id} timed out."
+            print(last_error, flush=True)
+            continue
+        except Exception as e:
+            last_error = f"Model {model_id} crashed: {str(e)}"
+            print(last_error, flush=True)
+            continue
+
+    # Agar saare free models fail ho jate hain tabhi ye final error dikhayega
+    return {"reply": f"Sorry, abhi saare AI servers busy hain. Last Error: {last_error}"}

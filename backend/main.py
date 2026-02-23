@@ -5,13 +5,18 @@ from dotenv import load_dotenv
 import os
 import requests
 
+# ===============================
+# Load Environment Variables
+# ===============================
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-
-# App Setup
+# ===============================
+# FastAPI App Setup
+# ===============================
 app = FastAPI()
 
+# Enable CORS so React (Vercel) can communicate with this Render backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,6 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ===============================
+# Vyomesh's Real Resume Data
+# ===============================
 resume_data = {
     "name": "Vyomesh Mishra",
     "role": "Computer Science Undergraduate & Software Developer",
@@ -49,6 +57,9 @@ resume_data = {
     ]
 }
 
+# ===============================
+# API Endpoints
+# ===============================
 @app.get("/resume-data")
 def get_resume():
     return resume_data
@@ -62,11 +73,10 @@ def chat_with_ai(request: ChatRequest):
         return {"reply": "Error: OpenRouter API key not configured in backend."}
 
     context = f"""
-    You are the official, professional AI assistant for {resume_data['name']}'s portfolio website.
-    Your goal is to answer recruiter and visitor questions about Vyomesh based ONLY on the provided data.
-    Be friendly, concise, and highly professional. Highlight his strengths. Do not invent or hallucinate any information.
+    You are the professional AI assistant for {resume_data['name']}'s portfolio.
+    Answer recruiter questions based ONLY on the provided data. Be concise.
     
-    CANDIDATE INFORMATION:
+    CANDIDATE INFO:
     - Name: {resume_data['name']}
     - Role: {resume_data['role']}
     - Education: {resume_data['education']}
@@ -82,11 +92,6 @@ def chat_with_ai(request: ChatRequest):
     
     ACHIEVEMENTS:
     {chr(10).join(resume_data['achievements'])}
-    
-    INSTRUCTIONS:
-    - Keep answers under 3-4 short sentences unless asked for details.
-    - If asked for contact info, provide the email and LinkedIn.
-    - If you don't know the answer based on the data above, politely state that they should contact Vyomesh directly for more details.
     """
 
     try:
@@ -94,11 +99,12 @@ def chat_with_ai(request: ChatRequest):
             "https://openrouter.ai/api/v1/chat/completions",
             headers={
                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
+                "HTTP-Referer": "https://github.com/vyomeshh", # OpenRouter requires this for free models
+                "X-Title": "Vyomesh AI Portfolio"
             },
             json={
-               
-                "model": "google/gemini-2.0-flash-lite-preview-02-05:free", 
+                "model": "google/gemma-2-9b-it:free", # Rock-solid, stable free model
                 "messages": [
                     {"role": "system", "content": context},
                     {"role": "user", "content": request.message}
@@ -106,13 +112,16 @@ def chat_with_ai(request: ChatRequest):
             }
         )
         
+        # Magic print statement: If it fails, this prints the EXACT reason to your Render logs
+        if response.status_code != 200:
+            print(f"OPENROUTER EXACT ERROR: {response.text}")
+            
         response.raise_for_status() 
         data = response.json()
 
         if "choices" in data and len(data["choices"]) > 0:
             reply = data["choices"][0]["message"]["content"]
         else:
-            print("Unexpected API response:", data)
             reply = "I'm having a little trouble connecting to my AI brain right now. Please try again in a moment!"
 
         return {"reply": reply}

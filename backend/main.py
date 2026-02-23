@@ -5,13 +5,18 @@ from dotenv import load_dotenv
 import os
 import requests
 
-
+# ===============================
+# Load Environment Variables
+# ===============================
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-
+# ===============================
+# FastAPI App Setup
+# ===============================
 app = FastAPI()
 
+# Enable CORS so React (Vercel) can communicate with this Render backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -20,7 +25,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+# ===============================
+# Vyomesh's Real Resume Data
+# ===============================
 resume_data = {
     "name": "Vyomesh Mishra",
     "role": "Computer Science Undergraduate & Software Developer",
@@ -50,6 +57,9 @@ resume_data = {
     ]
 }
 
+# ===============================
+# API Endpoints
+# ===============================
 @app.get("/resume-data")
 def get_resume():
     return resume_data
@@ -94,7 +104,7 @@ def chat_with_ai(request: ChatRequest):
                 "X-Title": "Vyomesh AI Portfolio"
             },
             json={
-                "model": "mistralai/mistral-7b-instruct:free", 
+                "model": "meta-llama/llama-3-8b-instruct:free", # Using Llama-3 (Highly reliable free model)
                 "messages": [
                     {"role": "system", "content": context},
                     {"role": "user", "content": request.message}
@@ -102,11 +112,12 @@ def chat_with_ai(request: ChatRequest):
             }
         )
         
-        
+        # If OpenRouter rejects it, return the exact error to the chat UI!
         if response.status_code != 200:
-            print(f"OPENROUTER EXACT ERROR: {response.text}", flush=True)
+            error_details = response.text
+            print(f"OPENROUTER EXACT ERROR: {error_details}", flush=True)
+            return {"reply": f"OpenRouter Error: {response.status_code} - {error_details}"}
             
-        response.raise_for_status() 
         data = response.json()
 
         if "choices" in data and len(data["choices"]) > 0:
@@ -118,4 +129,4 @@ def chat_with_ai(request: ChatRequest):
 
     except Exception as e:
         print(f"Backend Error: {e}", flush=True)
-        return {"reply": "Sorry, I am currently offline. Please ensure the backend server has internet access and a valid OpenRouter API key."}
+        return {"reply": f"Sorry, I am currently offline. Error details: {str(e)}"}

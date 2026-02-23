@@ -63,7 +63,7 @@ def chat_with_ai(request: ChatRequest):
                 "HTTP-Referer": "https://portfolio-vyomesh.vercel.app" # Required by OpenRouter
             },
             json={
-                "model": "google/gemini-2.0-flash-lite-preview-02-05:free", # Highly reliable free model
+                "model": "meta-llama/llama-3-8b-instruct:free", # Switched to highly stable Llama-3 model
                 "messages": [
                     {"role": "system", "content": f"You are Vyomesh's AI assistant. Answer questions concisely using ONLY this info: {resume_data}"},
                     {"role": "user", "content": request.message}

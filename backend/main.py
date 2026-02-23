@@ -5,18 +5,13 @@ from dotenv import load_dotenv
 import os
 import requests
 
-# ===============================
-# Load Environment Variables
-# ===============================
+
 load_dotenv()
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 
-# ===============================
-# FastAPI App Setup
-# ===============================
+
 app = FastAPI()
 
-# Enable CORS so React (Vercel) can communicate with this Render backend
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -25,9 +20,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ===============================
-# Vyomesh's Real Resume Data
-# ===============================
+
 resume_data = {
     "name": "Vyomesh Mishra",
     "role": "Computer Science Undergraduate & Software Developer",
@@ -57,9 +50,6 @@ resume_data = {
     ]
 }
 
-# ===============================
-# API Endpoints
-# ===============================
 @app.get("/resume-data")
 def get_resume():
     return resume_data
@@ -100,11 +90,11 @@ def chat_with_ai(request: ChatRequest):
             headers={
                 "Authorization": f"Bearer {OPENROUTER_API_KEY}",
                 "Content-Type": "application/json",
-                "HTTP-Referer": "https://github.com/vyomeshh", # OpenRouter requires this for free models
+                "HTTP-Referer": "https://github.com/vyomeshh", 
                 "X-Title": "Vyomesh AI Portfolio"
             },
             json={
-                "model": "google/gemma-2-9b-it:free", # Rock-solid, stable free model
+                "model": "mistralai/mistral-7b-instruct:free", 
                 "messages": [
                     {"role": "system", "content": context},
                     {"role": "user", "content": request.message}
@@ -112,9 +102,9 @@ def chat_with_ai(request: ChatRequest):
             }
         )
         
-        # Magic print statement: If it fails, this prints the EXACT reason to your Render logs
+        
         if response.status_code != 200:
-            print(f"OPENROUTER EXACT ERROR: {response.text}")
+            print(f"OPENROUTER EXACT ERROR: {response.text}", flush=True)
             
         response.raise_for_status() 
         data = response.json()
@@ -127,5 +117,5 @@ def chat_with_ai(request: ChatRequest):
         return {"reply": reply}
 
     except Exception as e:
-        print(f"Backend Error: {e}")
+        print(f"Backend Error: {e}", flush=True)
         return {"reply": "Sorry, I am currently offline. Please ensure the backend server has internet access and a valid OpenRouter API key."}
